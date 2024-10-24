@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity() {
             stopTimer()
             resetTimerView()
         }
+        binding!!.startOrStopTextView.setOnClickListener{
+            startOrStopButtonClicked(it)
+        }
     }
 
     private fun initStopWatch() {
@@ -36,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         initStopWatch()
     }
 
-    fun startOrStopButtonClicked(v: View) {
+    private fun startOrStopButtonClicked(v: View) {
         if (!startButtonClicked) {
             startTimer()
             startTimerView()
@@ -46,9 +49,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun stopTimerView() {
-        binding?.startOrStopTextView?.text = "Resume"
-        startButtonClicked = false
+    private fun startTimer() {
+        mHandler = Handler(Looper.getMainLooper())
+        mStatusChecker.run()
     }
 
     private fun startTimerView() {
@@ -56,13 +59,13 @@ class MainActivity : AppCompatActivity() {
         startButtonClicked = true
     }
 
-    private fun startTimer() {
-        mHandler = Handler(Looper.getMainLooper())
-        mStatusChecker.run()
-    }
-
     private fun stopTimer() {
         mHandler?.removeCallbacks(mStatusChecker)
+    }
+
+    private fun stopTimerView() {
+        binding?.startOrStopTextView?.text = "Resume"
+        startButtonClicked = false
     }
 
     private var mStatusChecker: Runnable = object : Runnable {
@@ -89,7 +92,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun getFormattedStopWatch(ms: Long): String {
-
         val seconds = ms / 100
         val milliseconds = ms % 100
         return "${if (seconds < 10) "00" else if (seconds < 100) "0" else ""}$seconds:" +
