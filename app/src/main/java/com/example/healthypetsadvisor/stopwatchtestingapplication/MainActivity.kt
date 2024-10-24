@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.ActivityMainBinding
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private var binding: ActivityMainBinding? = null
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initStopWatch() {
-        binding?.textViewStopWatch?.text = "000:00"
+        binding?.textViewStopWatch?.text = "00:00:00"
     }
 
     private fun resetTimerView() {
@@ -73,7 +74,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 timeInMiliSeconds += 1
                 Log.e("timeInSeconds", timeInMiliSeconds.toString())
-                updateStopWatchView(timeInMiliSeconds)
+                updateStopWatchView(timeInMiliSeconds*1000)
             } finally {
                 mHandler!!.postDelayed(this, mInterval.toLong())
             }
@@ -92,9 +93,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun getFormattedStopWatch(ms: Long): String {
-        val seconds = ms / 100
-        val milliseconds = ms % 100
-        return "${if (seconds < 10) "00" else if (seconds < 100) "0" else ""}$seconds:" +
-                "${if (milliseconds < 10) "0" else ""}$milliseconds"
+        var milliseconds = ms
+        val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
+        milliseconds -= TimeUnit.HOURS.toMillis(hours)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds)
+        milliseconds -= TimeUnit.MINUTES.toMillis(minutes)
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds)
+
+        return "${if (hours < 10) "0" else ""}$hours:" +
+                "${if (minutes < 10) "0" else ""}$minutes:" +
+                "${if (seconds < 10) "0" else ""}$seconds"
     }
 }
