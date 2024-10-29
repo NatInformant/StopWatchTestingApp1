@@ -3,105 +3,99 @@ package com.example.healthypetsadvisor.stopwatchtestingapplication
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.ActivityMainBinding
-import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private var binding: ActivityMainBinding? = null
-    private val mInterval = 1
-    private var mHandler: Handler? = null
+    private val stopwatchUpdaterDelay = 30L
+    private var stopwatchHandler: Handler? = null
     private var timeInMiliSeconds = 0L
-    private var startButtonClicked = false
+    private var isStopwatchRunning = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding!!.root)
+
         initStopWatch()
         binding!!.resetButton.setOnClickListener {
-            stopTimer()
+            stopStopwatch()
             resetTimerView()
         }
-        binding!!.startOrStopTextView.setOnClickListener{
+        binding!!.startOrStopTextView.setOnClickListener {
             startOrStopButtonClicked(it)
         }
     }
 
     private fun initStopWatch() {
-        binding?.textViewStopWatch?.text = "00:00:00"
+        binding?.textViewStopWatch?.text = "000:00"
     }
 
     private fun resetTimerView() {
         timeInMiliSeconds = 0
-        startButtonClicked = false
+        isStopwatchRunning = false
         binding?.startOrStopTextView?.text = "Start"
         initStopWatch()
     }
 
     private fun startOrStopButtonClicked(v: View) {
-        if (!startButtonClicked) {
-            startTimer()
-            startTimerView()
+        if (!isStopwatchRunning) {
+            startStopwatch()
+            startStopwatchView()
         } else {
-            stopTimer()
-            stopTimerView()
+            stopStopwatch()
+            stopStopwatchView()
         }
     }
 
-    private fun startTimer() {
-        mHandler = Handler(Looper.getMainLooper())
-        mStatusChecker.run()
+    private fun startStopwatch() {
+        previousTime = System.currentTimeMillis()
+        stopwatchHandler = Handler(Looper.getMainLooper())
+        stopwatchUpdater.run()
     }
 
-    private fun startTimerView() {
+    private fun startStopwatchView() {
         binding?.startOrStopTextView?.text = "Stop"
-        startButtonClicked = true
+        isStopwatchRunning = true
     }
 
-    private fun stopTimer() {
-        mHandler?.removeCallbacks(mStatusChecker)
+    private fun stopStopwatch() {
+        stopwatchHandler?.removeCallbacks(stopwatchUpdater)
     }
 
-    private fun stopTimerView() {
+    private fun stopStopwatchView() {
         binding?.startOrStopTextView?.text = "Resume"
-        startButtonClicked = false
+        isStopwatchRunning = false
     }
-
-    private var mStatusChecker: Runnable = object : Runnable {
+    private var previousTime = 0L
+    private var stopwatchUpdater: Runnable = object : Runnable {
         override fun run() {
             try {
-                timeInMiliSeconds += 1
-                Log.e("timeInSeconds", timeInMiliSeconds.toString())
-                updateStopWatchView(timeInMiliSeconds*1000)
+                val currentTime = System.currentTimeMillis()
+                timeInMiliSeconds += currentTime - previousTime
+                previousTime = currentTime
+                updateStopWatchView(timeInMiliSeconds)
             } finally {
-                mHandler!!.postDelayed(this, mInterval.toLong())
+                stopwatchHandler!!.postDelayed(this, stopwatchUpdaterDelay)
             }
         }
     }
 
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
         val formattedTime = getFormattedStopWatch((timeInMiliSeconds))
-        Log.e("formattedTime", formattedTime)
         binding?.textViewStopWatch?.text = formattedTime
     }
 
+    private fun getFormattedStopWatch(ms: Long): String {
+        val milliseconds = ms/10 % 100
+        val seconds = ms/1000
+
+        return "${if (seconds < 10) "00" else if (seconds < 100) "0" else ""}$seconds:" +
+                "${if (milliseconds < 10) "0" else ""}$milliseconds"
+    }
     override fun onDestroy() {
         super.onDestroy()
-        stopTimer()
-    }
-
-    fun getFormattedStopWatch(ms: Long): String {
-        var milliseconds = ms
-        val hours = TimeUnit.MILLISECONDS.toHours(milliseconds)
-        milliseconds -= TimeUnit.HOURS.toMillis(hours)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds)
-        milliseconds -= TimeUnit.MINUTES.toMillis(minutes)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds)
-
-        return "${if (hours < 10) "0" else ""}$hours:" +
-                "${if (minutes < 10) "0" else ""}$minutes:" +
-                "${if (seconds < 10) "0" else ""}$seconds"
+        stopStopwatch()
     }
 }
