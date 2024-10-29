@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.ActivityMainBinding
@@ -17,6 +15,7 @@ class MainActivity : AppCompatActivity() {
     private var timeInMiliSeconds = 0L
     private var isStopwatchRunning = false
     private val stopwatchDefaultValue = "000:00"
+    private val stopwatchListSize = 5;
     private var stopwatchList = emptyList<String>()
 
     private val stopwatchListAdapter = StopwatchListAdapter()
@@ -33,16 +32,18 @@ class MainActivity : AppCompatActivity() {
             startOrStopButtonClicked(it)
         }
         stopwatchListAdapter.submitList(stopwatchList)
-        with(binding.stopwatchList){
-            this.layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL,false)
+        with(binding.stopwatchList) {
+            this.layoutManager =
+                LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
             this.adapter = stopwatchListAdapter
+            this.itemAnimator = null
         }
 
         setContentView(binding.root)
     }
 
     private fun initStopwatchList() {
-        stopwatchList = listOf(stopwatchDefaultValue, stopwatchDefaultValue)
+        stopwatchList = List(stopwatchListSize) { stopwatchDefaultValue }
     }
 
     private fun resetStopwatch() {
@@ -98,7 +99,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
         val formattedTime = getFormattedStopWatch((timeInMiliSeconds))
-        stopwatchList = listOf( formattedTime, formattedTime)
+        stopwatchList = List(stopwatchListSize) { formattedTime }
         stopwatchListAdapter.submitList(stopwatchList)
     }
 
