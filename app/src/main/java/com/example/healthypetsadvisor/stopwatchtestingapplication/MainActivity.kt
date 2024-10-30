@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         binding.startOrStopTextView.setOnClickListener {
             startOrStopButtonClicked(it)
         }
-        stopwatchListAdapter.submitList(stopwatchList)
+
         with(binding.stopwatchList) {
             this.layoutManager =
                 LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initStopwatchList() {
         stopwatchList = List(stopwatchListSize) { stopwatchDefaultValue }
+        stopwatchListAdapter.submitList(stopwatchList)
     }
 
     private fun resetStopwatch() {
