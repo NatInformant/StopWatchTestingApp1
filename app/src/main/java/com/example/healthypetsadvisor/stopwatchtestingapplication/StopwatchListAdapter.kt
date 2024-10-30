@@ -27,7 +27,7 @@ class StopwatchListAdapter :
         }
     }
 
-    class StopwatchDiffUtil() : DiffUtil.ItemCallback<String>() {
+    class StopwatchDiffUtil: DiffUtil.ItemCallback<String>() {
         override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
             return true
         }

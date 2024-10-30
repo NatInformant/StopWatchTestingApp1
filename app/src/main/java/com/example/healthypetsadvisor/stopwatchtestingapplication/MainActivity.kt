@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     private var isStopwatchRunning = false
     private val stopwatchDefaultValue = "000:00"
     private val stopwatchListSize = 5;
-    private var stopwatchList = emptyList<String>()
 
     private val stopwatchListAdapter = StopwatchListAdapter()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,18 +32,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         with(binding.stopwatchList) {
-            this.layoutManager =
+            layoutManager =
                 LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
-            this.adapter = stopwatchListAdapter
-            this.itemAnimator = null
+            adapter = stopwatchListAdapter
+            itemAnimator = null
         }
 
         setContentView(binding.root)
     }
 
     private fun initStopwatchList() {
-        stopwatchList = List(stopwatchListSize) { stopwatchDefaultValue }
-        stopwatchListAdapter.submitList(stopwatchList)
+        stopwatchListAdapter.submitList(
+            List(stopwatchListSize) { stopwatchDefaultValue }
+        )
     }
 
     private fun resetStopwatch() {
@@ -100,8 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
         val formattedTime = getFormattedStopWatch((timeInMiliSeconds))
-        stopwatchList = List(stopwatchListSize) { formattedTime }
-        stopwatchListAdapter.submitList(stopwatchList)
+        stopwatchListAdapter.submitList(List(stopwatchListSize) { formattedTime })
     }
 
     private fun getFormattedStopWatch(ms: Long): String {
