@@ -3,7 +3,9 @@ package com.example.healthypetsadvisor.stopwatchtestingapplication
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.ActivityMainBinding
@@ -115,4 +117,19 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         stopStopwatchTime()
     }
+
+    /*override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val keyCode = event.keyCode
+        if (event.action != KeyEvent.ACTION_DOWN) {
+            return  super.dispatchKeyEvent(event)
+        }
+
+        return when (keyCode) {
+            KeyEvent.KEYCODE_KATAKANA_HIRAGANA -> {
+                Toast.makeText(this, "Громкость переопределена", Toast.LENGTH_SHORT).show()
+                true
+            }
+            else -> super.dispatchKeyEvent(event)
+        }
+    }*/
 }
