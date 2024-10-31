@@ -1,19 +1,19 @@
-package com.example.healthypetsadvisor.stopwatchtestingapplication
+package com.example.healthypetsadvisor.stopwatchtestingapplication.ui.main
 
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.KeyEvent
 import android.view.View
-import android.view.WindowManager
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.ActivityMainBinding
+import by.kirich1409.viewbindingdelegate.viewBinding
+import com.example.healthypetsadvisor.stopwatchtestingapplication.R
+import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.FragmentMainBinding
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
+class MainFragment : Fragment(R.layout.fragment_main) {
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+    private val binding by viewBinding<FragmentMainBinding>()
     private val stopwatchUpdaterDelay = 30L
     private var stopwatchHandler: Handler? = null
     private var timeInMiliSeconds = 0L
@@ -21,28 +21,47 @@ class MainActivity : AppCompatActivity() {
     private val stopwatchDefaultValue = "000:00"
     private val stopwatchListSize = 5;
 
-    private val stopwatchListAdapter = StopwatchListAdapter()
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+    private val stopwatchListAdapter = TimeListAdapter(StopwatchDiffUtil())
+    private val previousTimeListAdapter = TimeListAdapter(PreviousTimeDiffUtil())
+    private val viewModel by viewModel<MainViewModel>()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         initStopwatchList()
-        binding.resetButton.setOnClickListener {
-            stopStopwatchTime()
-            resetStopwatch()
-        }
-        binding.startOrStopTextView.setOnClickListener {
-            startOrStopButtonClicked(it)
-        }
+        setUpButtonsClickListeners()
 
+        setUpLists()
+
+        viewModel.previousTimeList.observe(viewLifecycleOwner) {
+            previousTimeListAdapter.submitList(it)
+        }
+        viewModel.updatePreviousTimeList()
+    }
+
+    private fun setUpLists() {
         with(binding.stopwatchList) {
             layoutManager =
-                LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+                LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             adapter = stopwatchListAdapter
             itemAnimator = null
         }
 
-        setContentView(binding.root)
+        with(binding.previousTimeList) {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = previousTimeListAdapter
+        }
+    }
+
+    private fun setUpButtonsClickListeners() {
+        binding.resetButton.setOnClickListener {
+            stopStopwatchTime()
+            resetStopwatch()
+            viewModel.clearPreviousTimeFromDb()
+        }
+        binding.startOrStopTextView.setOnClickListener {
+            startOrStopButtonClicked(it)
+        }
     }
 
     private fun initStopwatchList() {
@@ -65,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             stopStopwatchTime()
             setUpUiToStopStopwatch()
+            viewModel.addNewTime(stopwatchCurrentTime)
         }
     }
 
@@ -101,10 +121,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
+    private var stopwatchCurrentTime: String = ""
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
-        val formattedTime = getFormattedStopWatch((timeInMiliSeconds))
-        stopwatchListAdapter.submitList(List(stopwatchListSize) { formattedTime })
+        stopwatchCurrentTime = getFormattedStopWatch((timeInMiliSeconds))
+        stopwatchListAdapter.submitList(List(stopwatchListSize) { stopwatchCurrentTime })
     }
 
     private fun getFormattedStopWatch(ms: Long): String {
@@ -118,21 +138,5 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopStopwatchTime()
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val keyCode = event.keyCode
-
-        return when (keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN-> {
-                Toast.makeText(this, "Громкость переопределена", Toast.LENGTH_SHORT).show()
-                true
-            }
-            KeyEvent.KEYCODE_BACK -> {
-                Toast.makeText(this, "Кнопка назад переопределена", Toast.LENGTH_SHORT).show()
-                true
-            }
-            else -> super.dispatchKeyEvent(event)
-        }
     }
 }
