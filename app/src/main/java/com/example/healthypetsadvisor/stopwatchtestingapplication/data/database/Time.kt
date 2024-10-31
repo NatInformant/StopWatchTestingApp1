@@ -1,5 +1,6 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.data.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -7,5 +8,5 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "previous_time")
 data class Time(
     @PrimaryKey(autoGenerate = true) val id: Int,
-    val time: String
+    val time: String,
 )
