@@ -9,7 +9,18 @@
     tools:context=".ui.MainActivity"
     android:keepScreenOn="true"
     >
-
+    <TextView
+        android:id="@+id/go_to_test_fragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="Next fragment"
+        android:textColor="@color/white"
+        android:background="#9F38FA"
+        android:gravity="center"
+        android:padding="8dp"
+        />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/stopwatch_list"
         android:layout_width="match_parent"
