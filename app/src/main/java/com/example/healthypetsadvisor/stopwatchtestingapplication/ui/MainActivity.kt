@@ -1,21 +1,25 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.ui
 
 import android.view.KeyEvent
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import com.example.healthypetsadvisor.stopwatchtestingapplication.R
+import com.example.healthypetsadvisor.stopwatchtestingapplication.ui.main.MainFragment
 
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val keyCode = event.keyCode
         if (event.action != KeyEvent.ACTION_DOWN) {
-            return  super.dispatchKeyEvent(event)
+            return super.dispatchKeyEvent(event)
         }
 
         return when (keyCode) {
             KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> {
-                Toast.makeText(this, "Громкость переопределена", Toast.LENGTH_SHORT).show()
+                val navHostFragment: Fragment? =
+                    supportFragmentManager.fragments[0]
+                (navHostFragment?.childFragmentManager?.primaryNavigationFragment
+                        as? MainFragment)?.startOrStopButtonClicked()
                 true
             }
 

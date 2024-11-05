@@ -33,7 +33,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         initStopwatchList()
         setUpButtonsClickListeners()
 
@@ -65,8 +64,8 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             resetStopwatch()
             viewModel.clearPreviousTimeFromDb()
         }
-        binding.startOrStopTextView.setOnClickListener {
-            startOrStopButtonClicked(it)
+        binding.startOrStopTextview.setOnClickListener {
+            startOrStopButtonClicked()
         }
     }
 
@@ -79,11 +78,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private fun resetStopwatch() {
         timeInMiliSeconds = 0
         isStopwatchRunning = false
-        binding.startOrStopTextView.text = "Start"
+        binding.startOrStopTextview.text = "Start"
         initStopwatchList()
     }
 
-    private fun startOrStopButtonClicked(v: View) {
+    fun startOrStopButtonClicked() {
         if (!isStopwatchRunning) {
             startStopwatchTime()
             setUpUiToStartStopwatch()
@@ -108,7 +107,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun setUpUiToStartStopwatch() {
-        binding.startOrStopTextView.text = "Stop"
+        binding.startOrStopTextview.text = "Stop"
         isStopwatchRunning = true
     }
 
@@ -117,7 +116,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun setUpUiToStopStopwatch() {
-        binding.startOrStopTextView.text = "Resume"
+        binding.startOrStopTextview.text = "Resume"
         isStopwatchRunning = false
     }
 
