@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.healthypetsadvisor.stopwatchtestingapplication.R
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.FragmentMainBinding
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.StopwatchUtils.getFormattedTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,11 +21,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private val binding by viewBinding<FragmentMainBinding>()
     private val stopwatchCoroutineDelay = 30L
-    private var timeInMiliSeconds = 0L
+    private var currentStopwatchTimeInMiliSeconds = 0L
     private var isStopwatchRunning = false
     private val stopwatchDefaultValue = "000:00"
     private val stopwatchListSize = 5;
-    private var previousTime = 0L
+    private var stopwatchStartTime = 0L
     private var stopwatchCurrentTime: String = ""
     private var stopwatchCurrentTimeInMilis: Int = 0
     private var stopwatchJob: Job? = null
@@ -81,7 +82,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun resetStopwatch() {
-        timeInMiliSeconds = 0
+        stopwatchStartTime = 0
         isStopwatchRunning = false
         binding.startOrStopTextview.text = "Start"
         initStopwatchList()
@@ -99,13 +100,17 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun startStopwatchTime() {
-        previousTime = System.currentTimeMillis()
+        stopwatchStartTime =
+            if (stopwatchStartTime == 0L)
+                System.currentTimeMillis()
+            else
+                stopwatchStartTime
+
         stopwatchJob = lifecycleScope.launch(Dispatchers.Default) {
             while (isActive) {
                 val currentTime = System.currentTimeMillis()
-                timeInMiliSeconds += currentTime - previousTime
-                previousTime = currentTime
-                updateStopWatchView(timeInMiliSeconds)
+                currentStopwatchTimeInMiliSeconds = currentTime - stopwatchStartTime
+                updateStopWatchView(currentStopwatchTimeInMiliSeconds)
                 delay(stopwatchCoroutineDelay)
             }
         }
@@ -127,15 +132,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
         stopwatchCurrentTimeInMilis = timeInMiliSeconds.toInt()
-        stopwatchCurrentTime = getFormattedStopWatch((timeInMiliSeconds))
+        stopwatchCurrentTime = getFormattedTime(timeInMiliSeconds)
         stopwatchListAdapter.submitList(List(stopwatchListSize) { stopwatchCurrentTime })
-    }
-
-    private fun getFormattedStopWatch(ms: Long): String {
-        val milliseconds = ms / 10 % 100
-        val seconds = ms / 1000
-
-        return "${if (seconds < 10) "00" else if (seconds < 100) "0" else ""}$seconds:" +
-                "${if (milliseconds < 10) "0" else ""}$milliseconds"
     }
 }

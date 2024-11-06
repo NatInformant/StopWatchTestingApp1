@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.healthypetsadvisor.stopwatchtestingapplication.di.modules.DataBaseModule
 import com.example.healthypetsadvisor.stopwatchtestingapplication.di.modules.DataModule
 import com.example.healthypetsadvisor.stopwatchtestingapplication.di.modules.DomainModule
+import com.example.healthypetsadvisor.stopwatchtestingapplication.di.modules.ServiceModule
 import com.example.healthypetsadvisor.stopwatchtestingapplication.di.modules.ViewModelModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -21,7 +22,8 @@ class App : Application() {
                 ViewModelModule.viewModelModule,
                 DomainModule.domainModule,
                 DataModule.dataModule,
-                DataBaseModule.dataBaseModule
+                DataBaseModule.dataBaseModule,
+                ServiceModule.serviceModule
             )
         }
     }
