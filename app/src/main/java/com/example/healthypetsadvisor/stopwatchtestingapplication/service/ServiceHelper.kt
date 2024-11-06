@@ -8,6 +8,7 @@ import com.example.healthypetsadvisor.stopwatchtestingapplication.ui.MainActivit
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.CANCEL_REQUEST_CODE
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.CLICK_REQUEST_CODE
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.RESUME_REQUEST_CODE
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_START_TIME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_STATE
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOP_REQUEST_CODE
 
@@ -56,11 +57,11 @@ object ServiceHelper {
         )
     }
 
-    fun triggerForegroundService(context: Context, action: String, stopwatchStartTime: Int) {
+    fun triggerForegroundService(context: Context, action: String, stopwatchStartTime: Long = 0L) {
         Intent(context, StopwatchNotificationService::class.java).apply {
             this.action = action
+            putExtra(STOPWATCH_START_TIME, stopwatchStartTime)
             context.startService(this)
-
         }
     }
 }

@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.ACTION_SERVICE_CANCEL
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.ACTION_SERVICE_START
@@ -14,13 +15,18 @@ import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constant
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.NOTIFICATION_CHANNEL_ID
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.NOTIFICATION_CHANNEL_NAME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.NOTIFICATION_ID
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_COROUTINE_DELAY
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_START_TIME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_STATE
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.StopwatchUtils.getFormattedTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
-import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 class StopwatchNotificationService : Service(), KoinComponent {
     val notificationManager: NotificationManager by inject()
@@ -28,12 +34,9 @@ class StopwatchNotificationService : Service(), KoinComponent {
 
     private val binder = StopwatchBinder()
 
-    private var duration: Duration = Duration.ZERO
-    private lateinit var timer: Timer
-
-    var currentMiliSeconds =1
+    var stopwatchStartTime = 0L
     var currentState = StopwatchState.Idle
-
+    private var stopwatchJob: Job? = null
 
     override fun onBind(p0: Intent?) = binder
 
@@ -46,25 +49,29 @@ class StopwatchNotificationService : Service(), KoinComponent {
                     updateNotification(timeInMilis = miliSeconds)
                 }
             }
+
             StopwatchState.Stopped.name -> {
                 stopStopwatch()
                 setResumeButton()
             }
+
             StopwatchState.Canceled.name -> {
                 stopStopwatch()
                 cancelStopwatch()
                 stopForegroundService()
             }
         }
-        intent?.action.let {
+        intent?.action?.let {
             when (it) {
                 ACTION_SERVICE_START -> {
                     setStopButton()
                     startForegroundService()
+                    stopwatchStartTime = intent.getLongExtra(STOPWATCH_START_TIME, 0L)
                     startStopwatch { miliSeconds ->
                         updateNotification(timeInMilis = miliSeconds)
                     }
                 }
+
                 ACTION_SERVICE_STOP -> {
                     stopStopwatch()
                     setResumeButton()
@@ -80,24 +87,25 @@ class StopwatchNotificationService : Service(), KoinComponent {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun startStopwatch(onTick: (h: Int) -> Unit) {
+    private fun startStopwatch(onTick: (h: Long) -> Unit) {
         currentState = StopwatchState.Started
-        timer = fixedRateTimer(initialDelay = 1000L, period = 1000L) {
-            duration = duration.plus(1.seconds)
-
-            onTick(1)
+        stopwatchJob = CoroutineScope(Dispatchers.Default).launch {
+            while (isActive) {
+                val currentTime = System.currentTimeMillis()
+                val currentStopwatchTime = currentTime - stopwatchStartTime
+                onTick(currentStopwatchTime)
+                delay(STOPWATCH_COROUTINE_DELAY)
+            }
         }
     }
 
     private fun stopStopwatch() {
-        if (this::timer.isInitialized) {
-            timer.cancel()
-        }
+        stopwatchJob?.cancel()
         currentState = StopwatchState.Stopped
     }
 
     private fun cancelStopwatch() {
-        duration = Duration.ZERO
+        stopwatchStartTime = 0
         currentState = StopwatchState.Idle
     }
 
@@ -123,16 +131,12 @@ class StopwatchNotificationService : Service(), KoinComponent {
         }
     }
 
-    private fun updateNotification(timeInMilis:Int) {
+    private fun updateNotification(timeInMilis: Long) {
+        Log.d("NotificationSendEvent", getFormattedTime(timeInMilis))
         notificationManager.notify(
             NOTIFICATION_ID,
             notificationBuilder.setContentText(
-                /*formatTime(
-                    hours = hours,
-                    minutes = minutes,
-                    seconds = seconds,
-                )*/
-                "ff"
+                getFormattedTime(timeInMilis)
             ).build()
         )
     }
