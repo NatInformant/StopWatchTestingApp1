@@ -11,7 +11,7 @@ class MainRepository(private val dataBase: TimeDatabase) {
 
     suspend fun getPreviousTimeFromDb(): List<PreviousTime> =
         dataBase.timeDao().getAll().map { PreviousTime(it.timeStringValue, it.timeIntValue) }
-    
+
     suspend fun clearTimeTableInDb() =
         dataBase.timeDao().deleteAllFromDb()
 }

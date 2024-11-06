@@ -7,11 +7,11 @@ import androidx.room.Query
 @Dao
 interface TimeDao {
     @Query("SELECT * FROM previous_time")
-    fun getAll(): List<Time>
+    suspend fun getAll(): List<Time>
 
     @Insert
-    fun insert(time: Time)
+    suspend fun insert(time: Time)
 
     @Query("DELETE FROM previous_time")
-    fun deleteAllFromDb()
+    suspend fun deleteAllFromDb()
 }
