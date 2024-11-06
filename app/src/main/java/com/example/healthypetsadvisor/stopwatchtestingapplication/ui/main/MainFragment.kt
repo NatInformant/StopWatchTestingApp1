@@ -26,10 +26,11 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private val stopwatchListSize = 5;
     private var previousTime = 0L
     private var stopwatchCurrentTime: String = ""
+    private var stopwatchCurrentTimeInMilis: Int = 0
     private var stopwatchJob: Job? = null
 
-    private val stopwatchListAdapter = TimeListAdapter(StopwatchDiffUtil())
-    private val previousTimeListAdapter = TimeListAdapter(PreviousTimeDiffUtil())
+    private val stopwatchListAdapter = StopwatchListAdapter()
+    private val previousStopwatchListAdapter = PreviousTimeListAdapter()
     private val viewModel by viewModel<MainViewModel>()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -40,7 +41,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         setUpLists()
 
         viewModel.previousTimeList.observe(viewLifecycleOwner) {
-            previousTimeListAdapter.submitList(it)
+            previousStopwatchListAdapter.submitList(it)
         }
         viewModel.updatePreviousTimeList()
     }
@@ -55,7 +56,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
         with(binding.previousTimeList) {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = previousTimeListAdapter
+            adapter = previousStopwatchListAdapter
         }
     }
 
@@ -93,7 +94,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         } else {
             stopStopwatchTime()
             setUpUiToStopStopwatch()
-            viewModel.addNewTime(stopwatchCurrentTime)
+            viewModel.addNewTime(stopwatchCurrentTime, stopwatchCurrentTimeInMilis)
         }
     }
 
@@ -125,6 +126,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun updateStopWatchView(timeInMiliSeconds: Long) {
+        stopwatchCurrentTimeInMilis = timeInMiliSeconds.toInt()
         stopwatchCurrentTime = getFormattedStopWatch((timeInMiliSeconds))
         stopwatchListAdapter.submitList(List(stopwatchListSize) { stopwatchCurrentTime })
     }

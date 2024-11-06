@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.StopwatchListElementBinding
 
-class TimeListAdapter(diffUtil: DiffUtil.ItemCallback<String>) :
-    ListAdapter<String, TimeListAdapter.TextViewListViewHolder>(diffUtil) {
+class StopwatchListAdapter :
+    ListAdapter<String, StopwatchListAdapter.TextViewListViewHolder>( StopwatchDiffUtil()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextViewListViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         return TextViewListViewHolder(
@@ -24,6 +24,15 @@ class TimeListAdapter(diffUtil: DiffUtil.ItemCallback<String>) :
         ViewHolder(binding.root) {
         fun onBind(stopWatchText: String) {
             binding.textViewStopWatch.text = stopWatchText
+        }
+    }
+    class StopwatchDiffUtil : DiffUtil.ItemCallback<String>() {
+        override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+            return true
+        }
+
+        override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
+            return oldItem == newItem
         }
     }
 }

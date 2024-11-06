@@ -8,5 +8,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "previous_time")
 data class Time(
     @PrimaryKey(autoGenerate = true) val id: Int,
-    val time: String,
+    val timeStringValue: String,
+    @ColumnInfo(defaultValue = "0")
+    val timeIntValue: Int
 )

@@ -3,23 +3,24 @@ package com.example.healthypetsadvisor.stopwatchtestingapplication.data.database
 import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.DeleteColumn
+import androidx.room.RenameColumn
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
 
 @Database(
     entities = [Time::class],
-    /*autoMigrations = [AutoMigration(from = 3, to = 4,spec = TimeDatabase.MyAutoGenerationSpec::class)],*/
+    autoMigrations = [AutoMigration(from = 4, to = 5, spec = TimeDatabase.MyAutoMigrationSpec::class)],
     exportSchema = true,
-    version = 4
+    version = 5
 )
 abstract class TimeDatabase : RoomDatabase() {
     abstract fun timeDao(): TimeDao
-    /*@DeleteColumn.Entries(
-        DeleteColumn(
+    @RenameColumn.Entries(
+        RenameColumn(
             tableName = "previous_time",
-            columnName = "uselessValue"
-        ),
-        DeleteColumn("previous_time", "uselessValue2")
+            fromColumnName = "time",
+            toColumnName = "timeStringValue"
+        )
     )
-    class MyAutoGenerationSpec : AutoMigrationSpec*/
+    class MyAutoMigrationSpec : AutoMigrationSpec
 }
