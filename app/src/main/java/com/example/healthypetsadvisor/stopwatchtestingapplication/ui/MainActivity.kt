@@ -1,16 +1,19 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.ui
 
 import android.Manifest
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.example.healthypetsadvisor.stopwatchtestingapplication.R
 import com.example.healthypetsadvisor.stopwatchtestingapplication.ui.main.MainFragment
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.REQUEST_OVERLAY_PERMISSION
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.NetworkUtils
 
 
@@ -24,18 +27,6 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
                 Toast.makeText(this, "Подключения нет", Toast.LENGTH_SHORT).show()
             }
         }
-        requestPermissions(Manifest.permission.POST_NOTIFICATIONS)
-    }
-
-    private fun requestPermissions(vararg permissions: String) {
-        val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { result ->
-            result.entries.forEach {
-                Log.d("MainActivity", "${it.key} = ${it.value}")
-            }
-        }
-        requestPermissionLauncher.launch(permissions.asList().toTypedArray())
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

@@ -1,6 +1,9 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.ui.main
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -9,12 +12,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.example.healthypetsadvisor.stopwatchtestingapplication.R
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.FragmentMainBinding
-import com.example.healthypetsadvisor.stopwatchtestingapplication.service.ServiceHelper
-import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.ACTION_SERVICE_CANCEL
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.ACTION_SERVICE_START
-import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.ACTION_SERVICE_STOP
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.REQUEST_OVERLAY_PERMISSION
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_COROUTINE_DELAY
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.StopwatchUtils.getFormattedTime
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.StopwatchUtils.triggerForegroundService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,8 +29,9 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private val binding by viewBinding<FragmentMainBinding>()
     private var isStopwatchRunning = false
     private val stopwatchDefaultValue = "000:00"
-    private val stopwatchListSize = 5;
+    private val stopwatchListSize = 5
     private var stopwatchStartTime = 0L
+    private var stopwatchStopTime = 0L
     private var stopwatchCurrentTime: String = ""
     private var stopwatchCurrentTimeInMilis: Int = 0
     private var stopwatchJob: Job? = null
@@ -48,6 +51,21 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             previousStopwatchListAdapter.submitList(it)
         }
         viewModel.updatePreviousTimeList()
+        requestOverlayPermission()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        triggerForegroundService(
+            context = requireContext(),
+            stopwatchStartTime = stopwatchStartTime
+        )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        //hmmm
     }
 
     private fun setUpLists() {
@@ -88,10 +106,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         stopwatchStartTime = 0
         isStopwatchRunning = false
         binding.startOrStopTextview.text = "Start"
-        ServiceHelper.triggerForegroundService(
-            context = requireContext(),
-            action = ACTION_SERVICE_CANCEL
-        )
         initStopwatchList()
     }
 
@@ -111,7 +125,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
             if (stopwatchStartTime == 0L)
                 System.currentTimeMillis()
             else
-                stopwatchStartTime
+                stopwatchStartTime + System.currentTimeMillis() - stopwatchStopTime
 
         stopwatchJob = lifecycleScope.launch(Dispatchers.Default) {
             while (isActive) {
@@ -121,11 +135,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 delay(STOPWATCH_COROUTINE_DELAY)
             }
         }
-        ServiceHelper.triggerForegroundService(
-            context = requireContext(),
-            action = ACTION_SERVICE_START,
-            stopwatchStartTime = stopwatchStartTime
-        )
     }
 
     private fun setUpUiToStartStopwatch() {
@@ -134,10 +143,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     }
 
     private fun stopStopwatchTime() {
-        ServiceHelper.triggerForegroundService(
-            context = requireContext(),
-            action = ACTION_SERVICE_STOP
-        )
+        stopwatchStopTime = System.currentTimeMillis()
         stopwatchJob?.cancel()
     }
 
@@ -150,5 +156,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         stopwatchCurrentTimeInMilis = timeInMiliSeconds.toInt()
         stopwatchCurrentTime = getFormattedTime(timeInMiliSeconds)
         stopwatchListAdapter.submitList(List(stopwatchListSize) { stopwatchCurrentTime })
+    }
+
+    private fun requestOverlayPermission() {
+        if (!Settings.canDrawOverlays(requireContext())) {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:${requireActivity().packageName}")
+            )
+            startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION)
+        }
     }
 }
