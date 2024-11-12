@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.healthypetsadvisor.stopwatchtestingapplication.service.OverlayConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/stopwatch_overley"
     android:layout_width="wrap_content"
@@ -51,4 +51,4 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/reset_button"
         app:layout_constraintTop_toBottomOf="@+id/stopwatch_textview" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+</com.example.healthypetsadvisor.stopwatchtestingapplication.service.OverlayConstraintLayout>
