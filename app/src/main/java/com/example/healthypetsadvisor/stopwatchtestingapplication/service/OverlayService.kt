@@ -74,8 +74,9 @@ class OverlayService : Service(), KoinComponent {
     }
 
     private fun resumeStopwatchTime() {
-        notifyFragment(StopwatchState.RESUME)
         stopwatchStartTime = stopwatchStartTime + System.currentTimeMillis() - stopwatchStopTime
+        notifyFragment(StopwatchState.RESUME)
+        /*Log.w("Current stopwatch start time", stopwatchStartTime.toString())*/
         stopwatchJob = getStopwatchJob()
     }
 
@@ -86,18 +87,12 @@ class OverlayService : Service(), KoinComponent {
             binding.stopwatchTextview.post {
                 binding.stopwatchTextview.text = getFormattedTime(currentStopwatchTime)
             }
-            /*updateStopwatchUi(currentStopwatchTime)*/
+            /*Log.i("Current stopwatch stop time", stopwatchStopTime.toString())
+            Log.v("Current stopwatch time", currentStopwatchTime.toString())*/
             delay(STOPWATCH_COROUTINE_DELAY)
         }
     }
 
-    /*private suspend fun updateStopwatchUi(currentStopwatchTime: Long) {
-        withContext(Dispatchers.Main) {
-            binding.stopwatchTextview.post {
-                binding.stopwatchTextview.text = getFormattedTime(currentStopwatchTime)
-            }
-        }
-    }*/
 
     private fun setUpUiToStartStopwatch() {
         binding.resumeOrStopTextview.text = "Stop"
@@ -106,7 +101,7 @@ class OverlayService : Service(), KoinComponent {
 
     private fun stopStopwatchTime() {
         stopwatchJob?.cancel()
-        notifyFragment(StopwatchState.STOP, stopwatchStopTime)
+        notifyFragment(StopwatchState.STOP)
     }
 
     private fun setUpUiToStopStopwatch() {
@@ -134,11 +129,18 @@ class OverlayService : Service(), KoinComponent {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun notifyFragment(state: StopwatchState, stopwatchStopTime: Long = 0L) {
+    private fun notifyFragment(state: StopwatchState) {
         val intent = Intent(INTENT_ACTION_NAME)
-        intent.putExtra(STOPWATCH_STATE, state.name)
-        if (stopwatchStopTime != 0L) intent.putExtra(STOPWATCH_STOP_TIME, stopwatchStopTime)
 
+        intent.putExtra(STOPWATCH_STATE, state.name)
+
+        when(state){
+            StopwatchState.RESUME -> {intent.putExtra(STOPWATCH_START_TIME, stopwatchStartTime)}
+            StopwatchState.STOP -> {intent.putExtra(STOPWATCH_STOP_TIME, stopwatchStopTime)}
+            else -> {}
+        }
+
+/*        Log.d("Sended stopwatch stop time", stopwatchStopTime.toString())*/
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

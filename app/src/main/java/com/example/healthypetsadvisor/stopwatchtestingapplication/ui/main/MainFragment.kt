@@ -21,6 +21,7 @@ import com.example.healthypetsadvisor.stopwatchtestingapplication.service.Stopwa
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.INTENT_ACTION_NAME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.REQUEST_OVERLAY_PERMISSION
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_COROUTINE_DELAY
+import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_START_TIME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_STATE
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_STOP_TIME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.StopwatchUtils.getFormattedTime
@@ -65,6 +66,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 val stopwatchState = intent.getStringExtra(STOPWATCH_STATE)
                 when (stopwatchState) {
                     StopwatchState.RESUME.name -> {
+                        stopwatchStartTime = intent.getLongExtra(STOPWATCH_START_TIME, 0L)
                         startStopwatchTime()
                         setUpUiToStartStopwatch()
                     }
@@ -72,9 +74,10 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                         stopStopwatchTime()
                         setUpUiToStopStopwatch()
                         stopwatchStopTime = intent.getLongExtra(STOPWATCH_STOP_TIME, 0L)
-
+                        /*Log.e("Actual stopwatch start time", stopwatchStartTime.toString())
+                        Log.e("Actual stopwatch end time", stopwatchStopTime.toString())*/
                         updateStopWatchView(stopwatchStopTime - stopwatchStartTime)
-                        Log.d("Recieved stopwatch time", stopwatchCurrentTimeInMilis.toString())
+                        /*Log.e("Recieved stopwatch time", stopwatchCurrentTimeInMilis.toString())*/
                         viewModel.addNewTime(stopwatchCurrentTime, stopwatchCurrentTimeInMilis)
                     }
                     StopwatchState.RESET.name -> {
@@ -169,6 +172,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     fun startOrStopButtonClicked() {
         if (!isStopwatchRunning) {
+            setUpStopwatchStartTime()
             startStopwatchTime()
             setUpUiToStartStopwatch()
         } else {
@@ -178,19 +182,21 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-    private fun startStopwatchTime() {
+    private fun setUpStopwatchStartTime() {
         stopwatchStartTime =
             if (stopwatchStartTime == 0L)
                 System.currentTimeMillis()
             else
                 stopwatchStartTime + System.currentTimeMillis() - stopwatchStopTime
+    }
 
+    private fun startStopwatchTime() {
         stopwatchJob = lifecycleScope.launch(Dispatchers.Default) {
             while (isActive) {
                 stopwatchStopTime = System.currentTimeMillis()
                 val currentStopwatchTime = stopwatchStopTime - stopwatchStartTime
                 //Надо бы потестить синхронность работы корутины во фрагменте и корутины в сервисе.
-               /* Log.w ("Current stopwatch time in stopwatch job", currentStopwatchTime.toString())*/
+                /* Log.w ("Current stopwatch time in stopwatch job", currentStopwatchTime.toString())*/
                 updateStopWatchView(currentStopwatchTime)
                 delay(STOPWATCH_COROUTINE_DELAY)
             }
