@@ -1,15 +1,21 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.service
 
 import android.annotation.SuppressLint
+import android.app.ActivityOptions
+import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.StopwatchOverlayBinding
+import com.example.healthypetsadvisor.stopwatchtestingapplication.ui.MainActivity
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.INTENT_ACTION_NAME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_COROUTINE_DELAY
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_START_TIME
@@ -36,6 +42,7 @@ class OverlayService : Service(), KoinComponent {
     private var stopwatchJob: Job? = null
     private var isStopwatchRunning = true
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         stopwatchStartTime = intent?.getLongExtra(STOPWATCH_START_TIME, 0L) ?: 0L
         if (stopwatchStartTime == -1L) {
@@ -48,43 +55,47 @@ class OverlayService : Service(), KoinComponent {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     @SuppressLint("ClickableViewAccessibility")
     private fun createOverlayView() {
         stopwatchJob = getStopwatchJob()
 
         binding.root.setOnTouchListener(
-        object : View.OnTouchListener {
-            private var initialX: Int = 0
-            private var initialY: Int = 0
-            private var initialTouchX: Float = 0f
-            private var initialTouchY: Float = 0f
+            object : View.OnTouchListener {
+                private var initialX: Int = 0
+                private var initialY: Int = 0
+                private var initialTouchX: Float = 0f
+                private var initialTouchY: Float = 0f
 
-            override fun onTouch(p0: View?, event: MotionEvent): Boolean {
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        initialX = params.x
-                        initialY = params.y
-                        initialTouchX = event.rawX
-                        initialTouchY = event.rawY
-                        return true
-                    }
+                override fun onTouch(p0: View?, event: MotionEvent): Boolean {
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            initialX = params.x
+                            initialY = params.y
+                            initialTouchX = event.rawX
+                            initialTouchY = event.rawY
+                            return true
+                        }
 
-                    MotionEvent.ACTION_UP -> {
-                        //when the drag is ended switching the state of the widget
-                        return true
-                    }
+                        MotionEvent.ACTION_UP -> {
+                            //when the drag is ended switching the state of the widget
+                            return true
+                        }
 
-                    MotionEvent.ACTION_MOVE -> {
-                        //this code is helping the widget to move around the screen with fingers
-                        params.x = initialX + (event.rawX - initialTouchX).toInt()
-                        params.y = initialY + (event.rawY - initialTouchY).toInt()
-                        windowManager.updateViewLayout(binding.root, params)
-                        return true;
+                        MotionEvent.ACTION_MOVE -> {
+                            //this code is helping the widget to move around the screen with fingers
+                            params.x = initialX + (event.rawX - initialTouchX).toInt()
+                            params.y = initialY + (event.rawY - initialTouchY).toInt()
+                            windowManager.updateViewLayout(binding.root, params)
+                            return true;
+                        }
                     }
+                    return false
                 }
-                return false
-            }
-        });
+            })
+        binding.stopwatchTextview.setOnClickListener {
+            createMainActivityIntent().send(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+        }
 
         binding.resumeOrStopTextview.setOnClickListener {
             if (!isStopwatchRunning) {
@@ -102,6 +113,11 @@ class OverlayService : Service(), KoinComponent {
         }
 
         windowManager.addView(binding.root, params)
+    }
+
+    private fun createMainActivityIntent(): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java)
+        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 
     private fun destroyOverlayView() {
