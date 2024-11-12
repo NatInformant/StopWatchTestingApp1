@@ -1,10 +1,12 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
 import android.view.WindowManager
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.StopwatchOverlayBinding
@@ -20,7 +22,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -47,8 +48,43 @@ class OverlayService : Service(), KoinComponent {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun createOverlayView() {
         stopwatchJob = getStopwatchJob()
+
+        binding.root.setOnTouchListener(
+        object : View.OnTouchListener {
+            private var initialX: Int = 0
+            private var initialY: Int = 0
+            private var initialTouchX: Float = 0f
+            private var initialTouchY: Float = 0f
+
+            override fun onTouch(p0: View?, event: MotionEvent): Boolean {
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        initialX = params.x
+                        initialY = params.y
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        return true
+                    }
+
+                    MotionEvent.ACTION_UP -> {
+                        //when the drag is ended switching the state of the widget
+                        return true
+                    }
+
+                    MotionEvent.ACTION_MOVE -> {
+                        //this code is helping the widget to move around the screen with fingers
+                        params.x = initialX + (event.rawX - initialTouchX).toInt()
+                        params.y = initialY + (event.rawY - initialTouchY).toInt()
+                        windowManager.updateViewLayout(binding.root, params)
+                        return true;
+                    }
+                }
+                return false
+            }
+        });
 
         binding.resumeOrStopTextview.setOnClickListener {
             if (!isStopwatchRunning) {
@@ -134,13 +170,19 @@ class OverlayService : Service(), KoinComponent {
 
         intent.putExtra(STOPWATCH_STATE, state.name)
 
-        when(state){
-            StopwatchState.RESUME -> {intent.putExtra(STOPWATCH_START_TIME, stopwatchStartTime)}
-            StopwatchState.STOP -> {intent.putExtra(STOPWATCH_STOP_TIME, stopwatchStopTime)}
+        when (state) {
+            StopwatchState.RESUME -> {
+                intent.putExtra(STOPWATCH_START_TIME, stopwatchStartTime)
+            }
+
+            StopwatchState.STOP -> {
+                intent.putExtra(STOPWATCH_STOP_TIME, stopwatchStopTime)
+            }
+
             else -> {}
         }
 
-/*        Log.d("Sended stopwatch stop time", stopwatchStopTime.toString())*/
+        /*        Log.d("Sended stopwatch stop time", stopwatchStopTime.toString())*/
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }
