@@ -87,5 +87,8 @@ dependencies {
     // To use Kotlin Symbol Processing (KSP)
     kapt(libs.androidx.room.compiler)
 
+    //Zxing
+    implementation(libs.google.zxing)
+    implementation(libs.zxing.android.embedded)
 
 }
