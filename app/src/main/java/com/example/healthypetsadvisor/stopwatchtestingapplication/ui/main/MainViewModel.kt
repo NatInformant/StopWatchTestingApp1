@@ -33,7 +33,7 @@ class MainViewModel(
                     when (it.timeIntValue) {
                         maxTimeValue -> R.color.red
                         minTimeValue -> R.color.green
-                        else -> R.color.black
+                        else -> R.color.white
                     }
                 )
             })
