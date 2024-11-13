@@ -4,6 +4,7 @@ import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.WindowManager
@@ -52,7 +53,12 @@ class OverlayService : Service(), KoinComponent {
         stopwatchJob = getStopwatchJob()
 
         binding.stopwatchTextview.setOnClickListener {
-            createMainActivityIntent().send(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                createMainActivityIntent().send(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED)
+                return@setOnClickListener
+            }
+
+            createMainActivityIntent().send()
         }
 
         binding.resumeOrStopTextview.setOnClickListener {
@@ -156,7 +162,7 @@ class OverlayService : Service(), KoinComponent {
             else -> {}
         }
 
-        /*        Log.d("Sended stopwatch stop time", stopwatchStopTime.toString())*/
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        /*Log.d("Sended stopwatch stop time", stopwatchStopTime.toString())*/
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 }

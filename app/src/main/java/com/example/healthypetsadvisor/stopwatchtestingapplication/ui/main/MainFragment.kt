@@ -7,8 +7,9 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -19,7 +20,6 @@ import com.example.healthypetsadvisor.stopwatchtestingapplication.R
 import com.example.healthypetsadvisor.stopwatchtestingapplication.databinding.FragmentMainBinding
 import com.example.healthypetsadvisor.stopwatchtestingapplication.service.StopwatchState
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.INTENT_ACTION_NAME
-import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.REQUEST_OVERLAY_PERMISSION
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_COROUTINE_DELAY
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_START_TIME
 import com.example.healthypetsadvisor.stopwatchtestingapplication.utils.Constants.STOPWATCH_STATE
@@ -33,9 +33,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+
 class MainFragment : Fragment(R.layout.fragment_main) {
 
     private val binding by viewBinding<FragmentMainBinding>()
+    private var isWindowOverlayPermissionGranted = false
     private var isStopwatchRunning = false
     private val stopwatchDefaultValue = "000:00"
     private val stopwatchListSize = 5
@@ -49,14 +51,14 @@ class MainFragment : Fragment(R.layout.fragment_main) {
     private val previousStopwatchListAdapter = PreviousTimeListAdapter()
     private val viewModel by viewModel<MainViewModel>()
 
-    lateinit var bm: LocalBroadcastManager
+    private lateinit var localBroadcastManager: LocalBroadcastManager
 
     override fun onAttach(context: Context) {
-        super.onAttach(context);
-        bm = LocalBroadcastManager.getInstance(context)
+        super.onAttach(context)
+        localBroadcastManager = LocalBroadcastManager.getInstance(context)
         val actionReceiver = IntentFilter()
         actionReceiver.addAction(INTENT_ACTION_NAME)
-        bm.registerReceiver(onStopwatchEventReceived, actionReceiver)
+        localBroadcastManager.registerReceiver(onStopwatchEventReceived, actionReceiver)
     }
 
 
@@ -70,6 +72,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                         startStopwatchTime()
                         setUpUiToStartStopwatch()
                     }
+
                     StopwatchState.STOP.name -> {
                         stopStopwatchTime()
                         setUpUiToStopStopwatch()
@@ -80,6 +83,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                         /*Log.e("Recieved stopwatch time", stopwatchCurrentTimeInMilis.toString())*/
                         viewModel.addNewTime(stopwatchCurrentTime, stopwatchCurrentTimeInMilis)
                     }
+
                     StopwatchState.RESET.name -> {
                         resetStopwatch()
                         viewModel.clearPreviousTimeFromDb()
@@ -91,7 +95,7 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     override fun onDetach() {
         super.onDetach()
-        bm.unregisterReceiver(onStopwatchEventReceived)
+        localBroadcastManager.unregisterReceiver(onStopwatchEventReceived)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -106,14 +110,14 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
         viewModel.updatePreviousTimeList()
         requestOverlayPermission()
-        if(isStopwatchRunning){
+        if (isStopwatchRunning) {
             startStopwatchTime()
         }
     }
 
     override fun onStop() {
         super.onStop()
-        if(!isStopwatchRunning) return
+        if (!isStopwatchRunning || !isWindowOverlayPermissionGranted) return
 
         triggerForegroundService(
             context = requireContext(),
@@ -225,13 +229,29 @@ class MainFragment : Fragment(R.layout.fragment_main) {
 
     }
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { _ ->
+            if (Settings.canDrawOverlays(requireContext())) {
+                isWindowOverlayPermissionGranted = true
+            } else {
+                isWindowOverlayPermissionGranted = false
+                Toast.makeText(requireContext(),"Без этого разрешения окошка не будет",Toast.LENGTH_LONG).show()
+            }
+        }
+
     private fun requestOverlayPermission() {
-        if (!Settings.canDrawOverlays(requireContext())) {
+        if (Settings.canDrawOverlays(requireContext())) {
+            isWindowOverlayPermissionGranted=true
+        }else{
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${requireActivity().packageName}")
+                Uri.parse("package:" + requireContext().packageName )
             )
-            startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION)
+            requestPermissionLauncher.launch(intent)
         }
     }
+
+
 }

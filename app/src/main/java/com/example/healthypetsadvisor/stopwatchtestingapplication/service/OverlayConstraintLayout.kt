@@ -1,5 +1,6 @@
 package com.example.healthypetsadvisor.stopwatchtestingapplication.service
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -21,6 +22,7 @@ class OverlayConstraintLayout(
     private var initialTouchX: Float = 0f
     private var initialTouchY: Float = 0f
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         when (event?.action) {
             MotionEvent.ACTION_DOWN -> {
