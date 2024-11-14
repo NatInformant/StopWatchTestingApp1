@@ -23,20 +23,7 @@ class MainViewModel(
     fun updatePreviousTimeList() {
         viewModelScope.launch(Dispatchers.IO) {
             val previousTimeValues = getAllPreviousTime()
-
-            val maxTimeValue = previousTimeValues.maxByOrNull { it.timeIntValue }?.timeIntValue
-            val minTimeValue = previousTimeValues.minByOrNull { it.timeIntValue }?.timeIntValue
-
-            _previousTimeList.postValue(previousTimeValues.map {
-                PreviousTimeElement(
-                    it.timeStringValue,
-                    when (it.timeIntValue) {
-                        maxTimeValue -> R.color.red
-                        minTimeValue -> R.color.green
-                        else -> R.color.white
-                    }
-                )
-            })
+            _previousTimeList.postValue(previousTimeValues)
         }
     }
 
